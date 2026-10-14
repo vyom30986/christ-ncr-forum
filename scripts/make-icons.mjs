@@ -1,5 +1,6 @@
 // Generates public/icons/icon-192.png, icon-512.png, icon-maskable-512.png.
-// Pure Node (zlib only): a yellow tile with the CU C/S tetris stack on it.
+// Pure Node (zlib only): a gold tile with "CU" spelled in navy blocks over a row of colour blocks.
+// Also writes public/icons/icon.svg (the favicon) from the same grid so they never drift.
 import { deflateSync } from 'node:zlib'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -9,9 +10,9 @@ const out = join(dirname(fileURLToPath(import.meta.url)), '..', 'public', 'icons
 mkdirSync(out, { recursive: true })
 
 const INK = [10, 10, 10], YELLOW = [245, 184, 46]
-const SW = { Y: [10, 10, 10], G: [46, 204, 113], P: [255, 95, 162], B: [61, 123, 255], V: [139, 92, 246] }
-// 8x8 stack (same spirit as the login screen)
-const STACK = ['........', '......Y.', '.....YYY', 'B.......', 'BBB..PP.', 'GG.V.PP.', '.GGVVVBB', 'PPGGYYBV']
+const SW = { N: [30, 58, 138], Y: [10, 10, 10], G: [46, 204, 113], P: [255, 95, 162], B: [61, 123, 255], V: [139, 92, 246] }
+// 8x8 grid: C and U in navy, colour blocks along the bottom
+const STACK = ['........', 'NNN.N.N.', 'N...N.N.', 'N...N.N.', 'NNN.NNN.', '........', '.......P', 'BBGGVVPP']
 
 function crc32(buf) {
   let c, crc = 0xffffffff
@@ -81,3 +82,13 @@ writeFileSync(join(out, 'icon-192.png'), draw(192, { maskable: false }))
 writeFileSync(join(out, 'icon-512.png'), draw(512, { maskable: false }))
 writeFileSync(join(out, 'icon-maskable-512.png'), draw(512, { maskable: true }))
 console.log('icons written to', out)
+
+// Favicon: same grid as an SVG, centred on the gold tile.
+const hex = (c) => '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('')
+const cells = STACK.flatMap((row, gy) => [...row].map((ch, gx) => (ch === '.' ? '' :
+  `<rect x="${4 + gx * 7 + 0.5}" y="${4 + gy * 7 + 0.5}" width="6" height="6" rx="1.2" fill="${hex(SW[ch])}"/>`))).filter(Boolean)
+writeFileSync(join(out, 'icon.svg'), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="12" fill="${hex(YELLOW)}"/>
+  <g transform="translate(0 -3.5)">${cells.join('')}</g>
+</svg>
+`)

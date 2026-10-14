@@ -81,6 +81,12 @@ textarea::placeholder, input::placeholder { color: var(--meta); }
 }
 .brand { font-weight: 800; letter-spacing: -0.04em; line-height: 1; }
 .brand .slash { color: var(--christncr); }
+/* Christ NCR mark: a small gold block in front of the wordmark */
+.brand::before {
+  content: ''; display: inline-block; width: .42em; height: .42em; margin-right: .14em;
+  vertical-align: .08em; border-radius: .08em; background: var(--yellow);
+  box-shadow: inset -.06em -.06em 0 rgba(0, 0, 0, .18);
+}
 
 .h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.045em; line-height: 1.05; }
 .h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.03em; }
