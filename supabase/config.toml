@@ -1,0 +1,8 @@
+project_id = "christ-ncr-forum"
+
+[functions.ai-review]
+verify_jwt = true
+
+[functions.notify-status]
+# Called by the database webhook with the service-role key, not by browsers.
+verify_jwt = false

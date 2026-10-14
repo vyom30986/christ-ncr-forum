@@ -1,0 +1,12 @@
+node_modules
+dist
+dev-dist
+.env
+.env.local
+.env.*.local
+.DS_Store
+.vercel
+supabase/.temp
+.dbpassword
+.geminikey
+*.tsbuildinfo
