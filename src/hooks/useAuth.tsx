@@ -12,9 +12,6 @@ type AuthState = {
   /** The super admin (owner). Every other admin is view-only. */
   isOwner: boolean
   signIn: () => Promise<void>
-  /** Email a 6-digit one-time code to a @christuniversity.in address. */
-  sendEmailCode: (email: string) => Promise<void>
-  verifyEmailCode: (email: string, token: string) => Promise<void>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
 }
@@ -34,8 +31,6 @@ function DemoAuthProvider({ children }: { children: ReactNode }) {
     <Ctx.Provider value={{
       loading: false, session, profile: signedIn ? DEMO_PROFILE : null, isAdmin: signedIn, isOwner: signedIn,
       signIn: async () => { sessionStorage.setItem('christncr.demo', '1'); setSignedIn(true) },
-      sendEmailCode: async () => {},
-      verifyEmailCode: async () => { sessionStorage.setItem('christncr.demo', '1'); setSignedIn(true) },
       signOut: async () => { sessionStorage.removeItem('christncr.demo'); setSignedIn(false) },
       refreshProfile: async () => { setSignedIn((s) => s) },
     }}>{children}</Ctx.Provider>
@@ -121,23 +116,6 @@ function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error
   }
 
-  const sendEmailCode = async (email: string) => {
-    if (!/@([a-z0-9-]+\.)*christuniversity\.in$/i.test(email)) throw new Error('Only @christuniversity.in accounts can sign in.')
-    const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } })
-    if (error) {
-      // The enforce_christncr_domain trigger surfaces as a generic database error.
-      if (/database error/i.test(error.message)) throw new Error('Only @christuniversity.in accounts can sign in.')
-      // Mail provider refused or is down: point people at Google instead of a raw error.
-      if (/error sending|smtp|magic link email/i.test(error.message)) throw new Error('We could not send the code right now. Please use Sign in with Christ NCR Google instead.')
-      throw error
-    }
-  }
-
-  const verifyEmailCode = async (email: string, token: string) => {
-    const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' })
-    if (error) throw error
-  }
-
   const signOut = async () => { await supabase.auth.signOut() }
 
   const refreshProfile = async () => {
@@ -146,7 +124,7 @@ function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     if (data) setProfile(data as Profile)
   }
 
-  return <Ctx.Provider value={{ loading, session, profile, isAdmin, isOwner, signIn, sendEmailCode, verifyEmailCode, signOut, refreshProfile }}>{children}</Ctx.Provider>
+  return <Ctx.Provider value={{ loading, session, profile, isAdmin, isOwner, signIn, signOut, refreshProfile }}>{children}</Ctx.Provider>
 }
 
 export function useAuth() {

@@ -3,7 +3,6 @@ import { Link, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { Blocks, LOGIN_STACK } from '../components/Blocks'
 import { DEMO } from '../lib/demo'
-import { EmailCodeSignIn } from '../components/EmailCodeSignIn'
 import { ContactSheet } from '../components/ContactSheet'
 
 function oauthErrorFromUrl(): string | null {
@@ -98,7 +97,6 @@ export default function Login() {
           <span style={{ width: 28, height: 28, borderRadius: 8, background: '#0A0A0A', color: 'var(--yellow)', display: 'grid', placeItems: 'center', fontSize: 16, fontWeight: 700 }}>G</span>
           {busy ? 'Opening Google…' : DEMO ? 'Enter demo (no sign-in)' : 'Sign in with Christ NCR Google'}
         </button>
-        {!DEMO && <EmailCodeSignIn onError={setErr} />}
         <div style={{ fontSize: 13, lineHeight: 1.45, color: '#9A9A9A', textAlign: 'center', padding: '0 12px', textWrap: 'pretty' }}>
           Only @christuniversity.in accounts. Your posts are anonymous to other students.
         </div>

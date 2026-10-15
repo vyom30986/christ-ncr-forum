@@ -9,7 +9,7 @@ export function SignInSheet({ open, onClose, action }: { open: boolean; onClose:
     <Sheet open={open} onClose={onClose}>
       <div className="h2">Sign in to {action}</div>
       <div className="meta" style={{ fontSize: 15, lineHeight: 1.5 }}>
-        Anyone can read the board. To post, upvote or flag, sign in with your <b>Christ NCR ID</b>: your college Google account, or a one-time code sent to your college email.
+        Anyone can read the board. To post, upvote or flag, sign in with your <b>Christ NCR ID</b>: your @christuniversity.in Google account.
       </div>
       <button className="btn btn-primary" onClick={() => { onClose(); nav('/login', { state: { from: pathname } }) }}>Sign in with Christ NCR ID</button>
       <button className="btn" onClick={onClose}>Keep browsing</button>

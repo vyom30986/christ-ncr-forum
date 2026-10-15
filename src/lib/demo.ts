@@ -99,7 +99,7 @@ const findComment = (id: string) => { const c = comments.find((x) => x.id === id
 const isOp = (c: DemoComment) => rows.find((r) => r.id === c.complaint_id)?.profile.email === c.author.email
 
 const contactInbox: { id: string; name: string; contact: string | null; message: string; user_id: string | null; created_at: string }[] = [
-  { id: 'm1', name: 'Anita Rao', contact: 'anita.rao@example.com', message: 'I am a parent and I cannot get the sign-in code. My son is travelling this week.', user_id: null, created_at: iso(t0 - 2 * 3600_000) },
+  { id: 'm1', name: 'Anita Rao', contact: 'anita.rao@example.com', message: 'My college Google account says it is not allowed. I am in BCom Hons, second year.', user_id: null, created_at: iso(t0 - 2 * 3600_000) },
 ]
 
 export const demo = {
