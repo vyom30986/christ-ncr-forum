@@ -12,6 +12,8 @@ function oauthErrorFromUrl(): string | null {
   if (!desc) return null
   // The enforce_christncr_domain trigger surfaces as a generic "Database error saving new user".
   if (/database error|christuniversity\.in/i.test(desc)) return 'Only @christuniversity.in Google accounts can sign in.'
+  // Google refused Supabase's client credentials (e.g. a wrong client secret): not the student's fault.
+  if (/exchange external code/i.test(desc)) return 'Google sign-in is not working right now. Please try again later or use ✉ Contact us.'
   return desc
 }
 

@@ -106,7 +106,8 @@ function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin,
+        // Land on /login so a failed sign-in shows its error instead of a silent home page.
+        redirectTo: `${window.location.origin}/login`,
         // Always show Google's account chooser. The @christuniversity.in rule is
         // enforced by the enforce_christncr_domain trigger in the database, so no
         // hd= filter here: on Android it hides the chooser and shows an email box.
