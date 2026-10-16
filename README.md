@@ -37,7 +37,7 @@ scripts/make-icons.mjs         generates the PWA icons (runs on prebuild)
 ## 2. Edge Functions
 
 ```bash
-supabase secrets set GEMINI_API_KEY=... RESEND_API_KEY=... RESEND_FROM="Christ NCR Forum <cs@yourdomain.com>" APP_URL=https://your-app.vercel.app ESCALATION_EMAILS=pratham@christuniversity.in,facilities@christuniversity.in
+supabase secrets set GEMINI_API_KEY=... RESEND_API_KEY=... RESEND_FROM="Christ NCR Forum <cs@yourdomain.com>" APP_URL=https://christ-ncr-forum.pages.dev ESCALATION_EMAILS=pratham@christuniversity.in,facilities@christuniversity.in
 supabase functions deploy ai-review
 supabase functions deploy notify-status --no-verify-jwt
 ```
@@ -58,12 +58,13 @@ npm run dev              # http://localhost:5173
 
 `npm run build` typechecks, regenerates icons and produces `dist/`. `npm run preview` serves the production build (useful for testing the service worker and install prompt).
 
-## 4. Deploy to Vercel
+## 4. Deploy (Cloudflare Pages)
 
-1. Push the repo to GitHub and import it in Vercel. Framework preset: Vite. Build command `npm run build`, output `dist` (the defaults).
-2. Environment variables: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`.
-3. `vercel.json` already rewrites deep links to `index.html` and keeps `sw.js` uncached.
-4. Add the Vercel URL to Supabase Authentication → URL configuration (Site URL + redirect list), and set `APP_URL` in the function secrets so emails link back correctly.
+Live at https://christ-ncr-forum.pages.dev. The Pages project is connected to GitHub, so every push to `main` rebuilds and deploys.
+
+1. Build command `npm run build`, output `dist`. Build variables: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `NODE_VERSION=22`.
+2. `public/_redirects` handles deep links; `public/_headers` sets the CSP and other security headers.
+3. The site URL must be in Supabase Authentication → URL configuration (Site URL + redirect list).
 
 ## How things work
 
@@ -81,15 +82,8 @@ npm run dev              # http://localhost:5173
 
 ## Design
 
-Screens follow the Claude Design file "Christ NCR Forum Complaint Board": Nunito (rounded), ink `#0A0A0A`, paper `#FFFFFF`, yellow `#FFD60A` for calls to action and upvotes, green `#2ECC71` resolved, blue `#3D7BFF` in progress, purple `#8B5CF6` acknowledged/private, pink `#FF5FA2` flagged/rejected, grey `#F2F2F2` cards, muted `#8A8A8A`. Dark mode swaps the surface tokens in `src/index.css`.
+Screens follow the Claude Design file "Christ NCR Forum Complaint Board": Nunito (rounded), ink `#0A0A0A`, paper `#FFFFFF`, CHRIST gold `#F5B82E` for calls to action and upvotes, green `#2ECC71` resolved, blue `#3D7BFF` in progress, purple `#8B5CF6` acknowledged/private, pink `#FF5FA2` flagged/rejected, grey `#F2F2F2` cards, muted `#8A8A8A`. Dark mode swaps the surface tokens in `src/index.css`.
 
-## Deploy to Cloudflare (alternative or in addition to Vercel)
-
-**Pages (Git-connected):** Cloudflare dashboard → Workers & Pages → Create → Pages → Connect to Git → `<your-github-user>/<your-repo>`. Framework preset Vite, build command `npm run build`, output directory `dist`. Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` as build variables. `public/_redirects` handles deep links.
-
-**Workers (CLI):** `npm run build` then `npx wrangler deploy` (uses `wrangler.jsonc`, serves `dist/` with SPA fallback).
-
-Whichever host you use, add its URL to Supabase Authentication → URL configuration and to `APP_URL`.
 
 ## Email one-time code sign-in
 
@@ -102,3 +96,10 @@ Besides Google, students can sign in with a 6-digit code emailed to their @chris
 The @christuniversity.in rule is enforced twice: in the app before sending, and by the `enforce_christncr_domain` trigger on `auth.users`.
 
 Staff and other non-student @christuniversity.in addresses (anything that is not `first.last_courseYYYY@christuniversity.in`) cannot be parsed, so the first-visit screen asks for the name as a required field (migration 0013, `complete_onboarding(p_nationality, p_reporter_kind, p_name)`). Student names stay derived from the email and are not editable.
+
+## Security
+
+- Students sign in with Google only (email/password and email codes are disabled). Only `*.christuniversity.in` accounts, plus addresses on the admin list, can create an account; enforced by the `enforce_christncr_domain` trigger on `auth.users`.
+- Every table has RLS. Client roles only hold the table privileges they have a policy for, views are read-only, and internal/trigger functions are not callable over the API (`0021_security_hardening.sql`). New objects in `public` are not auto-granted: grant explicitly in each migration.
+- Secrets (Gemini key, service role) live only in Supabase function secrets; the browser gets the URL and the publishable key.
+- Rate limits: posts, flags, comments, contact messages and AI calls are capped in the database (0014, 0017, 0018) and in `ai-review`.
