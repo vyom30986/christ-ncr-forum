@@ -104,7 +104,7 @@ const Body = ({ c }: { c: AdminComplaint }) => (
 export default function Admin() {
   const toast = useToast()
   const now = useNow()
-  const { isOwner } = useAuth()
+  const { isOwner, canDelete } = useAuth()
   const [tab, setTab] = useState<Tab>('all')
   const [all, setAll] = useState<AdminComplaint[]>([])
   const [flagged, setFlagged] = useState<Flagged[]>([])
@@ -181,7 +181,7 @@ export default function Admin() {
       <div className="row page-head" style={{ padding: '18px 16px 14px', gap: 10 }}>
         <SettingsMenu />
         <div className="h1">Admin</div>
-        <span className="pill-tag hide-narrow" style={{ background: 'var(--christncr)', color: 'var(--on-christncr)', padding: '5px 9px' }}>{isOwner ? 'Super admin' : 'View only'}</span>
+        <span className="pill-tag hide-narrow" style={{ background: 'var(--christncr)', color: 'var(--on-christncr)', padding: '5px 9px' }}>{isOwner ? 'Super admin' : canDelete ? 'Can delete' : 'View only'}</span>
         <div style={{ marginLeft: 'auto' }}><ThemeToggle /></div>
       </div>
       <div className="page-head row" style={{ padding: '0 16px 12px', gap: 8 }}>
@@ -192,7 +192,9 @@ export default function Admin() {
       {!isOwner && (
         <div className="page-head" style={{ padding: '0 16px 12px' }}>
           <div className="card" style={{ padding: '10px 14px', borderLeft: '4px solid var(--blue)', fontSize: 13, lineHeight: 1.45 }}>
-            <b>View-only access.</b> You can see complaints, names and votes. Only the super admin can change statuses, reply, restore or delete.
+            {canDelete
+              ? <><b>Delete access.</b> You can see complaints, names and votes, and delete complaints. Only the super admin can change statuses, reply or restore.</>
+              : <><b>View-only access.</b> You can see complaints, names and votes. Only the super admin can change statuses, reply, restore or delete.</>}
           </div>
         </div>
       )}
@@ -238,7 +240,7 @@ export default function Admin() {
                 {isOwner && <ReplyRow busy={busy} onSend={(note) => sendReply(c, note)} />}
                 <div className="row" style={{ justifyContent: 'space-between' }}>
                   <span style={{ fontSize: 12, color: 'var(--meta)' }}>{categoryLabel(c.category)}{c.flags > 0 ? ` · ${c.flags} flag${c.flags > 1 ? 's' : ''}` : ''}</span>
-                  {isOwner && <button className="btn" style={{ height: 34, fontSize: 12, color: 'var(--pink)', borderColor: 'transparent' }} onClick={() => setRemoving(c)}>Delete</button>}
+                  {canDelete && <button className="btn" style={{ height: 34, fontSize: 12, color: 'var(--pink)', borderColor: 'transparent' }} onClick={() => setRemoving(c)}>Delete</button>}
                 </div>
               </div>
             ))}
@@ -259,9 +261,9 @@ export default function Admin() {
                 <Body c={c} />
                 {c.flag_reasons.length > 0 && <div style={{ fontSize: 12, color: 'var(--meta)' }}>Reasons: {c.flag_reasons.join(' · ')}</div>}
                 <div style={{ fontSize: 12, color: 'var(--meta)' }}>{c.profiles?.name} · {c.profiles?.email}</div>
-                {isOwner && (
+                {canDelete && (
                 <div className="row">
-                  <button className="btn" style={{ flex: 1, borderRadius: 12 }} onClick={() => restore(c)}>{c.hidden ? 'Restore' : 'Clear flags'}</button>
+                  {isOwner && <button className="btn" style={{ flex: 1, borderRadius: 12 }} onClick={() => restore(c)}>{c.hidden ? 'Restore' : 'Clear flags'}</button>}
                   <button className="btn btn-solid" style={{ flex: 1 }} onClick={() => setRemoving(c)}>Remove</button>
                 </div>
                 )}
@@ -310,7 +312,7 @@ export default function Admin() {
                 {isOwner && <ReplyRow busy={busy} onSend={(note) => sendReply(c, note)} />}
                 <div className="row">
                   <a className="btn" style={{ flex: 1, borderRadius: 12 }} href={`mailto:${c.profiles?.email ?? ''}?subject=${encodeURIComponent(`[Christ NCR Forum] ${c.title}`)}`}>Contact student</a>
-                  {c.status === 'open' && (
+                  {isOwner && c.status === 'open' && (
                     <button className="btn btn-primary sm" style={{ flex: 1 }} onClick={() => setStatus(c, 'acknowledged')}>Acknowledge</button>
                   )}
                 </div>

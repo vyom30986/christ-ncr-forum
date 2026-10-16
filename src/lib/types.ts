@@ -127,6 +127,8 @@ export type AdminEntry = {
   grad_year: number | null
   signed_in: boolean
   is_owner: boolean
+  /** Owner, or an admin the owner allowed to delete complaints (0022). */
+  can_delete: boolean
 }
 
 /** One upvote on a complaint, as admins see it. */

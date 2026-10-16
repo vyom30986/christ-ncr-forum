@@ -380,6 +380,13 @@ export async function grantAdmin(email: string) {
   fail(error)
 }
 
+/** Owner only: let an admin delete complaints, or take that away. */
+export async function setAdminDelete(email: string, allow: boolean) {
+  if (DEMO) return demo.setAdminDelete(email, allow)
+  const { error } = await supabase.rpc('admin_set_delete', { p_email: email, p_allow: allow })
+  fail(error)
+}
+
 export async function revokeAdmin(email: string) {
   if (DEMO) return demo.revokeAdmin(email)
   const { error } = await supabase.rpc('admin_revoke', { p_email: email })

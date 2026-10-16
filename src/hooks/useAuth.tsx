@@ -11,6 +11,8 @@ type AuthState = {
   isAdmin: boolean
   /** The super admin (owner). Every other admin is view-only. */
   isOwner: boolean
+  /** Owner, or an admin allowed to delete complaints. */
+  canDelete: boolean
   signIn: () => Promise<void>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
@@ -29,7 +31,7 @@ function DemoAuthProvider({ children }: { children: ReactNode }) {
   const session = signedIn ? ({ user: { id: DEMO_PROFILE.id, email: DEMO_PROFILE.email } } as unknown as Session) : null
   return (
     <Ctx.Provider value={{
-      loading: false, session, profile: signedIn ? DEMO_PROFILE : null, isAdmin: signedIn, isOwner: signedIn,
+      loading: false, session, profile: signedIn ? DEMO_PROFILE : null, isAdmin: signedIn, isOwner: signedIn, canDelete: signedIn,
       signIn: async () => { sessionStorage.setItem('christncr.demo', '1'); setSignedIn(true) },
       signOut: async () => { sessionStorage.removeItem('christncr.demo'); setSignedIn(false) },
       refreshProfile: async () => { setSignedIn((s) => s) },
@@ -43,6 +45,7 @@ function SupabaseAuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [isOwner, setIsOwner] = useState(false)
+  const [canDelete, setCanDelete] = useState(false)
 
   useEffect(() => {
     let alive = true
@@ -53,7 +56,7 @@ function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     })
     const { data: sub } = supabase.auth.onAuthStateChange((_evt, s) => {
       setSession(s)
-      if (!s) { setProfile(null); setIsAdmin(false); setIsOwner(false); setLoading(false) }
+      if (!s) { setProfile(null); setIsAdmin(false); setIsOwner(false); setCanDelete(false); setLoading(false) }
     })
     return () => { alive = false; sub.subscription.unsubscribe() }
   }, [])
@@ -71,7 +74,7 @@ function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         prof = (data as Profile | null) ?? null
         if (!prof) await new Promise((r) => setTimeout(r, 400))
       }
-      const [{ data: admin }, { data: owner }] = await Promise.all([supabase.rpc('is_admin'), supabase.rpc('is_owner')])
+      const [{ data: admin }, { data: owner }, { data: del }] = await Promise.all([supabase.rpc('is_admin'), supabase.rpc('is_owner'), supabase.rpc('can_delete_posts')])
       if (!alive) return
       if (!prof) {
         // The trigger that creates the profile did not run. Sign out so the
@@ -84,6 +87,7 @@ function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       setProfile(prof)
       setIsAdmin(Boolean(admin))
       setIsOwner(Boolean(owner))
+      setCanDelete(Boolean(del))
       setLoading(false)
     })()
     return () => { alive = false }
@@ -125,7 +129,7 @@ function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     if (data) setProfile(data as Profile)
   }
 
-  return <Ctx.Provider value={{ loading, session, profile, isAdmin, isOwner, signIn, signOut, refreshProfile }}>{children}</Ctx.Provider>
+  return <Ctx.Provider value={{ loading, session, profile, isAdmin, isOwner, canDelete, signIn, signOut, refreshProfile }}>{children}</Ctx.Provider>
 }
 
 export function useAuth() {

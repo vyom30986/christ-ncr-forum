@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
-import { fetchAdmins, grantAdmin, revokeAdmin } from '../lib/api'
+import { fetchAdmins, grantAdmin, revokeAdmin, setAdminDelete } from '../lib/api'
 import { cohortLabel, initials } from '../lib/labels'
 import type { AdminEntry } from '../lib/types'
 import { shortWhen } from '../lib/time'
@@ -38,6 +38,15 @@ export default function AdminAccess() {
     catch (e) { toast((e as Error).message, 'err') } finally { setBusy(false) }
   }
 
+  const toggleDelete = async (a: AdminEntry) => {
+    setBusy(true)
+    try {
+      await setAdminDelete(a.email, !a.can_delete)
+      toast(a.can_delete ? `${a.email} is view only again.` : `${a.email} can now delete complaints.`)
+      load()
+    } catch (e) { toast((e as Error).message, 'err') } finally { setBusy(false) }
+  }
+
   const confirmRemove = async () => {
     if (!removing) return
     setBusy(true)
@@ -53,7 +62,7 @@ export default function AdminAccess() {
         <div style={{ marginLeft: 'auto' }}><ThemeToggle /></div>
       </div>
       <div className="page-head meta" style={{ padding: '0 16px 16px' }}>
-        The owner is the super admin and can change everything. Admins added here are view-only: they see complaints, real names, users and votes, and receive escalations, but cannot change statuses, reply, restore, delete or read Contact us messages. The owner can never be removed.
+        The owner is the super admin and can change everything. Admins added here see complaints, real names, users and votes. They start as <b>view only</b>; the owner can also let an admin <b>delete</b> complaints. No admin except the owner can change statuses, reply, restore, read Contact us messages or manage admins. The owner can never be removed.
       </div>
 
       <div className="screen-scroll" style={{ gap: 16, maxWidth: 720 }}>
@@ -66,7 +75,7 @@ export default function AdminAccess() {
               <button className="btn btn-primary sm" disabled={busy || !valid} onClick={add}><ShieldIcon size={16} />Add</button>
             </div>
             {email && !valid && <div style={{ fontSize: 12, color: 'var(--pink)', fontWeight: 600 }}>That doesn't look like an email address.</div>}
-            <div className="meta" style={{ fontSize: 12 }}>Any email address. They sign in with that Google account and get view-only admin access.</div>
+            <div className="meta" style={{ fontSize: 12 }}>Any email address. They sign in with that Google account and start as view only. Use “Allow delete” to let them delete complaints.</div>
           </div>
         ) : (
           <div className="card" style={{ gap: 6, borderLeft: '4px solid var(--christncr)' }}>
@@ -95,6 +104,7 @@ export default function AdminAccess() {
                     <span style={{ fontSize: 15, fontWeight: 700 }}>{a.name ?? a.email.split('@')[0]}</span>
                     {a.is_owner && <span className="pill-tag" style={{ background: 'var(--christncr)', color: 'var(--on-christncr)' }}>Owner</span>}
                     {isMe && <span className="pill-tag" style={{ background: 'var(--card)', color: 'var(--meta)' }}>You</span>}
+                    {!a.is_owner && <span className="pill-tag" style={{ background: a.can_delete ? 'var(--pink)' : 'var(--card)', color: a.can_delete ? '#0A0A0A' : 'var(--meta)' }}>{a.can_delete ? 'Can delete' : 'View only'}</span>}
                     {!a.signed_in && <span className="pill-tag" style={{ background: 'var(--card)', color: 'var(--meta)' }}>Not signed in yet</span>}
                   </span>
                   <span style={{ fontSize: 12, color: 'var(--meta)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -102,7 +112,13 @@ export default function AdminAccess() {
                   </span>
                 </span>
                 {iAmOwner && !a.is_owner && (
-                  <button className="btn" style={{ height: 36, fontSize: 12, color: 'var(--pink)' }} disabled={busy} onClick={() => setRemoving(a)}>Remove</button>
+                  <span className="row" style={{ gap: 6, flexShrink: 0 }}>
+                    <button className="btn" style={{ height: 36, fontSize: 12 }} disabled={busy} onClick={() => toggleDelete(a)}
+                      title={a.can_delete ? 'Make this admin view only' : 'Let this admin delete complaints'}>
+                      {a.can_delete ? 'View only' : 'Allow delete'}
+                    </button>
+                    <button className="btn" style={{ height: 36, fontSize: 12, color: 'var(--pink)' }} disabled={busy} onClick={() => setRemoving(a)}>Remove</button>
+                  </span>
                 )}
               </div>
             )

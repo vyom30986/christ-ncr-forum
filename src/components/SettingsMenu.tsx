@@ -36,7 +36,7 @@ export function SettingsMenu() {
 /** The profile + settings panel itself (also opened from the Settings tab). */
 export function SettingsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const inst = useInstall()
-  const { profile, session, isAdmin, isOwner, signOut, refreshProfile } = useAuth()
+  const { profile, session, isAdmin, isOwner, canDelete, signOut, refreshProfile } = useAuth()
   const nav = useNavigate()
   const loc = useLocation()
   const replayTour = () => { onClose(); if (loc.pathname !== '/') { try { sessionStorage.setItem('christncr.tour.replay', '1') } catch { /* ignore */ } nav('/') } else startTour() }
@@ -90,7 +90,7 @@ export function SettingsSheet({ open, onClose }: { open: boolean; onClose: () =>
               </button>
             )
           } />
-          <Row k="Role" v={isOwner ? 'Super admin' : isAdmin ? 'Admin (view only)' : 'Student'} />
+          <Row k="Role" v={isOwner ? 'Super admin' : isAdmin ? (canDelete ? 'Admin (can delete)' : 'Admin (view only)') : 'Student'} />
         </div>
         <div className="meta" style={{ fontSize: 12 }}>
           Read from your @christuniversity.in address. Other students never see your name or course on your posts.

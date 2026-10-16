@@ -65,8 +65,8 @@ const updates: PublicUpdate[] = [
 ]
 
 const admins: AdminEntry[] = [
-  { email: ME.email, added_at: iso(t0 - 30 * DAY), name: ME.name, course: ME.course, grad_year: ME.grad_year, signed_in: true, is_owner: true },
-  { email: 'shlok.ram@bbafth.christuniversity.in', added_at: iso(t0 - 20 * DAY), name: 'Shlok Ram', course: 'BBAFTH', grad_year: null, signed_in: true, is_owner: false },
+  { email: ME.email, added_at: iso(t0 - 30 * DAY), name: ME.name, course: ME.course, grad_year: ME.grad_year, signed_in: true, is_owner: true, can_delete: true },
+  { email: 'shlok.ram@bbafth.christuniversity.in', added_at: iso(t0 - 20 * DAY), name: 'Shlok Ram', course: 'BBAFTH', grad_year: null, signed_in: true, is_owner: false, can_delete: true },
 ]
 
 const emit = () => window.dispatchEvent(new CustomEvent('christncr-demo-change'))
@@ -229,8 +229,14 @@ export const demo = {
     if (!/^[a-z0-9._%+-]+@[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(e)) throw new Error('That does not look like an email address')
     if (!admins.some((a) => a.email === e)) {
       const p = rows.find((r) => r.profile.email === e)?.profile
-      admins.push({ email: e, added_at: iso(Date.now()), name: p?.name ?? null, course: p?.course ?? null, grad_year: p?.grad_year ?? null, signed_in: Boolean(p), is_owner: false })
+      admins.push({ email: e, added_at: iso(Date.now()), name: p?.name ?? null, course: p?.course ?? null, grad_year: p?.grad_year ?? null, signed_in: Boolean(p), is_owner: false, can_delete: false })
     }
+  },
+  async setAdminDelete(email: string, allow: boolean) {
+    await wait()
+    const a = admins.find((x) => x.email === email.trim().toLowerCase() && !x.is_owner)
+    if (!a) throw new Error('No such admin')
+    a.can_delete = allow
   },
   async revokeAdmin(email: string) {
     if (admins.find((a) => a.email === email)?.is_owner) throw new Error('The owner cannot be removed')
