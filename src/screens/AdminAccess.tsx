@@ -28,7 +28,8 @@ export default function AdminAccess() {
   }, [toast])
   useEffect(() => { load() }, [load])
 
-  const valid = /^[a-z0-9._%+-]+@([a-z0-9-]+\.)*christuniversity\.in$/i.test(email.trim())
+  // Any address can be an admin (0020); students still need a college account.
+  const valid = /^[a-z0-9._%+-]+@[a-z0-9-]+(\.[a-z0-9-]+)+$/i.test(email.trim())
 
   const add = async () => {
     if (!valid) return
@@ -60,12 +61,12 @@ export default function AdminAccess() {
           <div className="card" style={{ gap: 12 }}>
             <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: '-0.02em' }}>Give admin access</div>
             <div className="row">
-              <input className="input" type="email" placeholder="name.surname@bbafth.christuniversity.in" value={email}
+              <input className="input" type="email" placeholder="name@christuniversity.in or any email" value={email}
                 onChange={(e) => setEmail(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && add()} autoCapitalize="none" />
               <button className="btn btn-primary sm" disabled={busy || !valid} onClick={add}><ShieldIcon size={16} />Add</button>
             </div>
-            {email && !valid && <div style={{ fontSize: 12, color: 'var(--pink)', fontWeight: 600 }}>Must be a @christuniversity.in address.</div>}
-            <div className="meta" style={{ fontSize: 12 }}>Only @christuniversity.in addresses. They get view-only admin access the next time they sign in.</div>
+            {email && !valid && <div style={{ fontSize: 12, color: 'var(--pink)', fontWeight: 600 }}>That doesn't look like an email address.</div>}
+            <div className="meta" style={{ fontSize: 12 }}>Any email address. They sign in with that Google account and get view-only admin access.</div>
           </div>
         ) : (
           <div className="card" style={{ gap: 6, borderLeft: '4px solid var(--christncr)' }}>

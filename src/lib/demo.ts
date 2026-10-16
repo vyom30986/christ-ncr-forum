@@ -226,7 +226,7 @@ export const demo = {
   async fetchAdmins() { await wait(); return [...admins] },
   async grantAdmin(email: string) {
     const e = email.trim().toLowerCase()
-    if (!/^[a-z0-9._%+-]+@([a-z0-9-]+\.)*christuniversity\.in$/.test(e)) throw new Error('Admins must use a @christuniversity.in address')
+    if (!/^[a-z0-9._%+-]+@[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(e)) throw new Error('That does not look like an email address')
     if (!admins.some((a) => a.email === e)) {
       const p = rows.find((r) => r.profile.email === e)?.profile
       admins.push({ email: e, added_at: iso(Date.now()), name: p?.name ?? null, course: p?.course ?? null, grad_year: p?.grad_year ?? null, signed_in: Boolean(p), is_owner: false })

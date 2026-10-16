@@ -112,8 +112,12 @@ async function handle(req: Request): Promise<Response> {
     global: { headers: { Authorization: authHeader } },
   })
   const { data: { user }, error: userErr } = await userClient.auth.getUser()
-  if (userErr || !/@([a-z0-9-]+\.)*christuniversity\.in$/i.test(user?.email ?? '')) {
-    return json({ error: 'Unauthorized' }, 401)
+  if (userErr || !user?.email) return json({ error: 'Unauthorized' }, 401)
+  // Students need a college address; admins (any address, see 0020) are let through.
+  if (!/@([a-z0-9-]+\.)*christuniversity\.in$/i.test(user.email)) {
+    const svc = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+    const { data: isAdmin } = await svc.from('admins').select('email').eq('email', user.email.toLowerCase()).maybeSingle()
+    if (!isAdmin) return json({ error: 'Unauthorized' }, 401)
   }
 
   let input: { body?: string; category?: string; title?: string }
